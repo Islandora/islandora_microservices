@@ -29,8 +29,8 @@ class thumbnail_plugin(IslandoraListenerPlugin):
     now = time.time()
 
     if 'islandora:genericCModel' in cmodels:
-      outDS = 'JPG_' + str(now)
-      DSC.create_thumbnail(obj, inDS, outDS)
+      # outDS = 'JPG_' + str(now)
+      # DSC.create_thumbnail(obj, inDS, outDS) # leads to an infinite loop .. don't need that!
       # may need a separate viewer
       ri.addRelationship(inDS,'hasThumbnail',outDS)
       if mime == 'application/pdf' and method in changeMethods: # just this
