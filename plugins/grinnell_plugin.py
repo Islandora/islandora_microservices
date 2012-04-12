@@ -1,6 +1,6 @@
 from islandoraUtils import DSConverter as DSC
 from plugin_manager import IslandoraListenerPlugin
-from islandoraUtils.metadata import fedora_relationships as RELS
+from islandoraUtils.metadata.fedora_relationships import rels_namespace, rels_object, rels_int
 import pprint
 import time
 
@@ -22,7 +22,7 @@ class thumbnail_plugin(IslandoraListenerPlugin):
     method = message['method']
     changeMethods = ['addDatastream', 'purgeDatastream', 'modifyDatastreamByReference']
     
-    ri = RELS.rels_int(obj)
+    relsint = rels_int(obj)
     
     inDS = message['dsid']
     mime = obj[inDS].mimeType
@@ -36,8 +36,8 @@ class thumbnail_plugin(IslandoraListenerPlugin):
       if mime == 'application/pdf' and method in changeMethods: # just this
         outDS = 'SWF_' + str(now)
         DSC.create_swf(obj, inDS, outDS)
-        ri.addRelationship(inDS,'hasDerivative',outDS)
-    
+        relsint.addRelationship(inDS,'hasDerivative',outDS)
+        relsint.update()
     return True
     
   def islandoraMessage(self, method, message, client):
