@@ -32,7 +32,7 @@ class thumbnail_plugin(IslandoraListenerPlugin):
       # outDS = 'JPG_' + str(now)
       # DSC.create_thumbnail(obj, inDS, outDS) # leads to an infinite loop .. don't need that!
       # may need a separate viewer
-      ri.addRelationship(inDS,'hasThumbnail',outDS)
+      # ri.addRelationship(inDS,'hasThumbnail',outDS)
       if mime == 'application/pdf' and method in changeMethods: # just this
         outDS = 'SWF_' + str(now)
         DSC.create_swf(obj, inDS, outDS)
