@@ -89,7 +89,6 @@ class GrinnellMime():
 
     def image_derivative(self):
         self.create_derivative('hasThumbnail', tn_postfix, self.create_thumbnail)
-        self.create_derivative('hasSWF', '.swf', DSC.create_swf)
         self.create_derivative('hasJP2', '.jp2', DSC.create_jp2)
 
     def document_derivative(self):
@@ -140,8 +139,10 @@ class GrinnellMime():
     # image stuff
     def image_jpeg(self):
         self.image_derivative()
+        self.create_derivative('hasSWF', '.swf', jpeg_to_swf)
     def image_png(self):
         self.image_derivative()
+        self.create_derivative('hasSWF', '.swf', png_to_swf)
     def image_tif(self):
         self.image_derivative()
     def image_tiff(self):
@@ -177,3 +178,40 @@ class GrinnellMime():
             # we catch a key error because .mimeType throws one 
             # if no mimeType is defined 
             pass
+
+    def jpeg_to_swf(obj,dsid,swfid):
+      image_to_swf(obj,dsid,swfid,'jpeg')
+      
+    def png_to_swf(obj,dsid,swfid):
+      image_to_swf(obj,dsid,swfid,'png')      
+      
+    def image_to_swf(obj,dsid,swfid,source):
+      logger = logging.getLogger('islandoraUtils.DSConverter.create_swf')
+      #recieve PDF create a SWF for use with flexpaper
+      directory, file = get_datastream_as_file(obj, dsid, source)
+    
+      converter = subprocess.Popen([source+'2swf', directory+'/'+file, '-o', directory+'/'+swfid,\
+           '-T 9'], stdout=subprocess.PIPE)
+      out, err = converter.communicate()
+      if converter.returncode != 0:
+          # logger.warning('PID:%s DSID:%s SWF creation failed. Trying alternative.' % (obj.pid, dsid))
+          # converter = subprocess.Popen(['pdf2swf', directory+'/'+file, '-o', directory+'/'+swfid,\
+           #    '-T 9', '-f', '-t', '-s', 'storeallcharacters', '-G', '-s', 'poly2bitmap'], stdout=subprocess.PIPE)
+          # out, err = converter.communicate()
+          pass
+
+      # catch the case where PDF2SWF fails to create the file, but returns 
+      if converter.returncode == 0 and os.path.isfile(directory + '/' + swfid):
+          update_datastream(obj, swfid, directory+'/'+swfid, label=source+' to swf', mimeType='application/x-shockwave-flash')
+          r = 0
+      elif not os.path.isfile(directory + '/' + swfid):
+          logger.warning('PID:%s DSID:%s SWF creation failed (converter returned: "%s").' % (obj.pid, dsid, out))
+          r = 1
+      else:
+          logger.warning('PID:%s DSID:%s SWF creation failed (converter return code:%d).' % (obj.pid, dsid, pdf2swf.returncode))
+          r = converter.returncode
+
+      rmtree(directory, ignore_errors=True)
+      return r
+      
+      
