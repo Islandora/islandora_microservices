@@ -89,7 +89,7 @@ class GrinnellMime():
 
     def image_derivative(self):
         self.create_derivative('hasThumbnail', tn_postfix, self.create_thumbnail)
-        self.create_derivative('hasJP2', '.jp2', DSC.create_jp2)
+        # self.create_derivative('hasJP2', '.jp2', DSC.create_jp2)
 
     def document_derivative(self):
         self.create_derivative('hasPDF', '.pdf', DSC.create_pdf)
