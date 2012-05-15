@@ -5,6 +5,7 @@ Created on March 5, 2011
 '''
 
 import string
+import logging
 from islandoraUtils import DSConverter as DSC
 from islandoraUtils.metadata.fedora_relationships import rels_int, rels_namespace, rels_object
 from islandoraUtils.fedoraLib import mangle_dsid
