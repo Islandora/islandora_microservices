@@ -185,7 +185,7 @@ class GrinnellMime():
     def png_to_swf(self,obj,dsid,swfid):
       self.image_to_swf(obj,dsid,swfid,'png')      
       
-    def image_to_swf(obj,dsid,swfid,source):
+    def image_to_swf(self,obj,dsid,swfid,source):
       logger = logging.getLogger('islandoraUtils.DSConverter.create_swf')
       #recieve PDF create a SWF for use with flexpaper
       directory, file = get_datastream_as_file(obj, dsid, source)
