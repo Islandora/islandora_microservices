@@ -139,10 +139,10 @@ class GrinnellMime():
     # image stuff
     def image_jpeg(self):
         self.image_derivative()
-        self.create_derivative('hasSWF', '.swf', jpeg_to_swf)
+        self.create_derivative('hasSWF', '.swf', self.jpeg_to_swf)
     def image_png(self):
         self.image_derivative()
-        self.create_derivative('hasSWF', '.swf', png_to_swf)
+        self.create_derivative('hasSWF', '.swf', self.png_to_swf)
     def image_tif(self):
         self.image_derivative()
     def image_tiff(self):
@@ -179,11 +179,11 @@ class GrinnellMime():
             # if no mimeType is defined 
             pass
 
-    def jpeg_to_swf(obj,dsid,swfid):
-      image_to_swf(obj,dsid,swfid,'jpeg')
+    def jpeg_to_swf(self,obj,dsid,swfid):
+      self.image_to_swf(obj,dsid,swfid,'jpeg')
       
-    def png_to_swf(obj,dsid,swfid):
-      image_to_swf(obj,dsid,swfid,'png')      
+    def png_to_swf(self,obj,dsid,swfid):
+      self.image_to_swf(obj,dsid,swfid,'png')      
       
     def image_to_swf(obj,dsid,swfid,source):
       logger = logging.getLogger('islandoraUtils.DSConverter.create_swf')
