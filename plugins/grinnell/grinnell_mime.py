@@ -51,6 +51,7 @@ class GrinnellMime():
 
     # general derivative creation function
     def create_derivative(self, relationship, postfix, function, dsid=None, args=None):
+        logger = logging.getLogger('islandoraUtils.DSConverter.create_swf')
         # make sure we are not creating a derivative of a derivative
         if (not self.test_derivative()):
             logger.debug('Not a derivative')
