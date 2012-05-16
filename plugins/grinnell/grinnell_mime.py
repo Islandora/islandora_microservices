@@ -53,17 +53,21 @@ class GrinnellMime():
     def create_derivative(self, relationship, postfix, function, dsid=None, args=None):
         # make sure we are not creating a derivative of a derivative
         if (not self.test_derivative()):
+            logger.debug('Not a derivative')
             # we default to creating a derivative of ourselves
             if not dsid:
                 dsid = self.dsid
             # see if we need a derivative
             relationships = self.relsint.getRelationships(subject=self.dsid, predicate=relationship)
             if relationships:
+                logger.debug('Relationships exist')
                 did = relationships[0][2].data
                 if DSC.check_dates(self.obj, self.dsid, did):
+                    logger.debug('Dates check oyt')
                     self.call_function(function, dsid, did, args)
                     self.relsint.update()
             else:
+                logger.debug('No relationships exist')
                 did = self.dsid.rsplit('.', 1)[0]
                 did += postfix
                 did = mangle_dsid(did)
@@ -73,6 +77,7 @@ class GrinnellMime():
                     did += postfix
                     did = mangle_dsid(did)
                 r = self.call_function(function, dsid, did, args)
+                logger.debug('Return value of converter is '+r)
                 if( r == 0 ):
                     self.relsint.addRelationship(self.dsid, relationship, did)
                     self.relsint.update()
