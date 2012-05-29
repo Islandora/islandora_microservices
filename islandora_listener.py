@@ -182,7 +182,7 @@ class IslandoraListener(ConnectionListener):
                 content_models = self._get_fedora_content_models(obj)
             except FedoraConnectionException:
                 obj = None
-                content_models = None
+                content_models = []
 
             # add the content models to the message object for the plugin
             message['content_models'] = content_models
