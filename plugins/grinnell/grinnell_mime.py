@@ -18,14 +18,14 @@ from islandoraUtils.fedoraLib import mangle_dsid
 tn_postfix = '-tn.jpg'
 
 class GrinnellMime():
-
+    
     def __init__(self, obj, message):
         self.obj = obj
         self.message = message
-
+    
     def create_thumbnail(self, obj, dsid, tnid):
         r = DSC.create_thumbnail(obj, dsid, tnid)
-
+        
         if r == 0:
             relationships = self.relsint.getRelationships(subject='TN', predicate='fromMime')
             if (not relationships and 'TN' not in obj):
@@ -39,36 +39,31 @@ class GrinnellMime():
                     self.relsint.purgeRelationships(subject='TN', predicate='fromMime')
                     self.relsint.addRelationship('TN', 'fromMime', new_mime)
         return r
-
+    
     # general call derivative function
     def call_function(self, function, dsid, did, args):
         if(args):
             r = function(self.obj, dsid, did, args)
         else:
             r = function(self.obj, dsid, did)
-
+        
         return r
-
+    
     # general derivative creation function
     def create_derivative(self, relationship, postfix, function, dsid=None, args=None):
-        logger = logging.getLogger('islandoraUtils.DSConverter.create_swf')
         # make sure we are not creating a derivative of a derivative
         if (not self.test_derivative()):
-            logger.debug('Not a derivative')
             # we default to creating a derivative of ourselves
             if not dsid:
                 dsid = self.dsid
             # see if we need a derivative
             relationships = self.relsint.getRelationships(subject=self.dsid, predicate=relationship)
             if relationships:
-                logger.debug('Relationships exist')
                 did = relationships[0][2].data
                 if DSC.check_dates(self.obj, self.dsid, did):
-                    logger.debug('Dates check oyt')
                     self.call_function(function, dsid, did, args)
                     self.relsint.update()
             else:
-                logger.debug('No relationships exist')
                 did = self.dsid.rsplit('.', 1)[0]
                 did += postfix
                 did = mangle_dsid(did)
@@ -78,11 +73,10 @@ class GrinnellMime():
                     did += postfix
                     did = mangle_dsid(did)
                 r = self.call_function(function, dsid, did, args)
-                logger.debug('Return value of converter is '+r)
                 if( r == 0 ):
                     self.relsint.addRelationship(self.dsid, relationship, did)
                     self.relsint.update()
-
+    
     # test derivative - returns true if the dsid is a derivative.
     def test_derivative(self):
         relationships = self.relsint.getRelationships(object=self.dsid)
@@ -90,7 +84,7 @@ class GrinnellMime():
             return True
         else:
             return False
-
+    
     # meta functions called by multiple mime functions
     def video_derivative(self):
         self.create_derivative('hasMP4', '.mp4', DSC.create_mp4)
@@ -98,11 +92,11 @@ class GrinnellMime():
         if(relationship):
             mp4id = relationship[0][2].data
             self.create_derivative('hasThumbnail', tn_postfix, self.create_thumbnail, mp4id)
-
+    
     def image_derivative(self):
         self.create_derivative('hasThumbnail', tn_postfix, self.create_thumbnail)
         # self.create_derivative('hasJP2', '.jp2', DSC.create_jp2)
-
+    
     def document_derivative(self):
         self.create_derivative('hasPDF', '.pdf', DSC.create_pdf)
         # get name of pdf to create swf and thumbnail from
@@ -116,7 +110,7 @@ class GrinnellMime():
         args = ['-mm', '--cbr', '-b96']
         self.create_derivative('hasMP3', '.mp3', DSC.create_mp3, args=args)
         self.create_derivative('hasOGG', '.ogg', DSC.create_ogg)
-
+    
     ##
     ## functions need to be defined for each mimetype to be worked on
     ##
@@ -128,11 +122,11 @@ class GrinnellMime():
         self.video_derivative()
     def video_x_ms_wmv(self):
         self.video_derivative()
-
+    
     # document stuff
     def application_pdf(self):
         self.create_derivative('hasThumbnail', tn_postfix, self.create_thumbnail)
-        self.create_derivative('hasSWF', '.swf', DSC.create_swf)
+        self.create_derivative('hasSWF', '%.swf', DSC.create_swf) # create multiple SWFs per page
     def application_vnd_ms_powerpoint(self):
         self.document_derivative()
     def application_vnd_ms_excel(self):
@@ -147,7 +141,7 @@ class GrinnellMime():
         self.document_derivative()
     def text_rtf(self):
         self.document_derivative()
-
+    
     # image stuff
     def image_jpeg(self):
         self.image_derivative()
@@ -163,17 +157,17 @@ class GrinnellMime():
         self.image_derivative()
     def image_gif(self):
         self.create_derivative('hasThumbnail', tn_postfix, self.create_thumbnail)
-
+    
     # audio stuff
     def audio_x_wav(self):
         self.audio_derivative()
     def audio_mpeg(self):
         self.audio_derivative()
-
+    
     # mimetype isn't found, do nothing
     def mimetype_none(self):
         pass
-
+    
     # this is a simple dispatcher that will run functions based on mimetype
     def dispatch(self, dsid):
         self.relsint = rels_int(self.obj, rels_namespace('grinnell', 'http://www.grinnell.edu/ontologies/relsint'), 'grinnell')
@@ -187,21 +181,21 @@ class GrinnellMime():
             mime_function = getattr( self, mime_function_name, self.mimetype_none )
             mime_function()
         except KeyError:
-            # we catch a key error because .mimeType throws one 
-            # if no mimeType is defined 
+            # we catch a key error because .mimeType throws one
+            # if no mimeType is defined
             pass
-
+    
     def jpeg_to_swf(self,obj,dsid,swfid):
       self.image_to_swf(obj,dsid,swfid,'jpeg')
-      
+    
     def png_to_swf(self,obj,dsid,swfid):
-      self.image_to_swf(obj,dsid,swfid,'png')      
-      
+      self.image_to_swf(obj,dsid,swfid,'png')
+    
     def image_to_swf(self,obj,dsid,swfid,source):
       logger = logging.getLogger('islandoraUtils.DSConverter.create_swf')
       #recieve PDF create a SWF for use with flexpaper
       directory, file = get_datastream_as_file(obj, dsid, source)
-    
+      
       converter = subprocess.Popen([source+'2swf', directory+'/'+file, '-o', directory+'/'+swfid,\
            '-T 9'], stdout=subprocess.PIPE)
       out, err = converter.communicate()
@@ -211,8 +205,8 @@ class GrinnellMime():
            #    '-T 9', '-f', '-t', '-s', 'storeallcharacters', '-G', '-s', 'poly2bitmap'], stdout=subprocess.PIPE)
           # out, err = converter.communicate()
           pass
-
-      # catch the case where PDF2SWF fails to create the file, but returns 
+      
+      # catch the case where PDF2SWF fails to create the file, but returns
       if converter.returncode == 0 and os.path.isfile(directory + '/' + swfid):
           update_datastream(obj, swfid, directory+'/'+swfid, label=source+' to swf', mimeType='application/x-shockwave-flash')
           r = 0
@@ -222,7 +216,7 @@ class GrinnellMime():
       else:
           logger.warning('PID:%s DSID:%s SWF creation failed (converter return code:%d).' % (obj.pid, dsid, pdf2swf.returncode))
           r = converter.returncode
-
+      
       rmtree(directory, ignore_errors=True)
       return r
       
