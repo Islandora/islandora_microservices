@@ -13,13 +13,13 @@
 
 PROG="Islandora Microservices"
 PYTHON=python
-MICROSERVICES_PATH=/opt/islandora_microservices/
-CONFIG_FILE=/opt/islandora_microservices/config/islandora_listener.cfg
-PLUGIN_DIR=/opt/islandora_microservices/plugins_stable
+MICROSERVICES_PATH=/var/www/drupal/sites/all/modules/contrib/islandora_microservices/
+CONFIG_FILE=/var/www/drupal/sites/all/modules/contrib/islandora_microservices/islandora_listener.cfg
+PLUGIN_DIR=/var/www/drupal/sites/all/modules/contrib/islandora_microservice/plugins
 
 # *** Please make sure you change the fedora user to reflect the local setup. ***
 
-FEDORA_USER=microservices
+FEDORA_USER=islandora
 
 start () {
 	echo -n "Starting $PROG: "
