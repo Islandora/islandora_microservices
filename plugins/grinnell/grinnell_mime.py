@@ -126,7 +126,7 @@ class GrinnellMime():
     # document stuff
     def application_pdf(self):
         self.create_derivative('hasThumbnail', tn_postfix, self.create_thumbnail)
-        self.create_derivative('hasSWF', '%.swf', DSC.create_swf) # create multiple SWFs per page
+        self.create_derivative('hasSWF', '.swf', DSC.create_swf)
     def application_vnd_ms_powerpoint(self):
         self.document_derivative()
     def application_vnd_ms_excel(self):
