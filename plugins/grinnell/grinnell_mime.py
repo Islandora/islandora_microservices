@@ -186,10 +186,10 @@ class GrinnellMime():
             pass
     
     def jpeg_to_swf(self,obj,dsid,swfid):
-      self.image_to_swf(obj,dsid,swfid,'jpeg')
+      return self.image_to_swf(obj,dsid,swfid,'jpeg')
     
     def png_to_swf(self,obj,dsid,swfid):
-      self.image_to_swf(obj,dsid,swfid,'png')
+      return self.image_to_swf(obj,dsid,swfid,'png')
     
     def image_to_swf(self,obj,dsid,swfid,source):
       logger = logging.getLogger('islandoraUtils.DSConverter.create_swf')
