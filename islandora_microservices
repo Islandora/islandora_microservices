@@ -1,5 +1,15 @@
 #!/bin/sh
 #
+### BEGIN INIT INFO
+# Provides:          islandora_microservices
+# Required-Start:    $local_fs $remote_fs $network fedora
+# Required-Stop:     $local_fs $remote_fs $network fedora
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start Islandora Microservices.
+# Description:       Start the Islandora Microservices.
+### END INIT INFO
+
 #
 #
 #   Startup/shutdown script for running islandora microservices.
@@ -17,17 +27,21 @@ MICROSERVICES_PATH=/var/www/drupal/sites/all/modules/contrib/islandora_microserv
 CONFIG_FILE=/var/www/drupal/sites/all/modules/contrib/islandora_microservices/islandora_listener.cfg
 PLUGIN_DIR=/var/www/drupal/sites/all/modules/contrib/islandora_microservice/plugins
 
-# *** Please make sure you change the fedora user to reflect the local setup. ***
 
-FEDORA_USER=islandora
+PID_SEARCH=`ps -ef | grep 'python' | grep 'islandora_listener' | grep $CONFIG_FILE | grep -v 'grep' | awk '{print $2}'`
+
+# *** Please make sure you change the fedora user to reflect the local setup. ***
+FEDORA_USER=root
 
 start () {
 	echo -n "Starting $PROG: "
 	# check to see if the process is already running
-	if [ -f /var/lock/islandora_microservices ]; then
+#	if [ -f /var/lock/islandora_microservices ]; then
+	if [ $PID_SEARCH ]; then
 		echo "$PROG is already running"
 	else
 			# start JMS as the fedora user
+			cd $MICROSERVICES_PATH
 			sudo -E -u $FEDORA_USER bash -c "env HOME=/home/microservices $PYTHON ${MICROSERVICES_PATH}islandora_listener.py -C $CONFIG_FILE -P $PLUGIN_DIR &> /dev/null &"
 			sleep 3
 			ps -ef | grep 'python' | grep 'islandora_listener' | grep $CONFIG_FILE | grep -v 'grep' >/dev/null 2>&1
@@ -38,7 +52,7 @@ start () {
 			else
 				echo "                                          [ FAILED ]"
 			fi
-		fi
+	fi
 }
 
 stop () {
@@ -73,8 +87,12 @@ case $1 in
 		restart
 	;;
 	status)
-		if [ -f /var/lock/islandora_microservices ]; then
-			echo "$PROG (pid `ps -ef | grep 'python' | grep 'islandora_listener' | grep $CONFIG_FILE | grep -v 'grep' | awk '{print $2}'`) is running..."
+		if [ -f /var/lock/islandora_microservices ] ; then
+			if [ ! $PID_SEARCH ] ; then
+				echo "Stale lock file exists. No pid found for Islandora Microservices. $PROG is not running."
+			else
+				echo "$PROG (pid `ps -ef | grep 'python' | grep 'islandora_listener' | grep $CONFIG_FILE | grep -v 'grep' | awk '{print $2}'`) is running..."
+			fi
 		else
 			echo "$PROG has not been started."
 		fi

@@ -157,7 +157,10 @@ class IslandoraListener(ConnectionListener):
 
         # pivot on the message type
         if headers['destination'] == ISLANDORA_TOPIC:
-            method = headers['method']
+            if 'method' in headers:
+                method = headers['method']
+            else:
+                method = None
 
             if method in islandora_methods:
                 plugin_set = islandora_methods['all'] | islandora_methods[method]
@@ -167,6 +170,7 @@ class IslandoraListener(ConnectionListener):
             for plugin in plugin_set:
                 try:
                     message = json.loads(body)
+                    plugin.plugin_object.stomp = self
                     plugin.plugin_object.islandoraMessage(method, message, self.client)
                 except:
                     logger.exception('Uncaught exception in plugin: %s!' % plugin.name)
@@ -198,6 +202,7 @@ class IslandoraListener(ConnectionListener):
 
             for plugin in (plugin_set_cm & plugin_set_methods):
                 try:
+                    logger.info('Processing PID: %(pid)s with plugin: %(plugin)s.' % {'pid' : pid, 'plugin' : plugin.name})
                     plugin.plugin_object.fedoraMessage(message, obj, self.client)
                 except:
                     logger.exception('Uncaught exception in plugin: %s!' % plugin.name)
@@ -210,23 +215,7 @@ class IslandoraListener(ConnectionListener):
         logger.error(body)
         self.disconnect()
         os._exit(1)
-
-# broken code to retry on error, when we have an unstable server
-# i think its worth fixing this code, currently its hard to test because
-# this only happens sometimes
-#    def on_error(self, headers, body):
-#        """
-#        \see ConnectionListener::on_error
-#        """
-#        global disconnected_state
-#        disconnected_state = True
-#        logger.error("Error reported by Stomp. Trying to reconnect.")
-#        logger.error(body)
-#        logger.debug('here')
-#        self.conn.stop()
-#        logger.debug('there')
-#        signal.alarm(reconnect_wait)
-        
+ 
     def on_connected(self, headers, body):
         """
         \see ConnectionListener::on_connected
@@ -292,7 +281,7 @@ class IslandoraListener(ConnectionListener):
         except NotConnectedException:
             pass
     
-    def send(self, destination, correlation_id, message):
+    def send(self, destination, message, headers = {}):
         """
         Required Parametes:
             destination - where to send the message
@@ -301,7 +290,7 @@ class IslandoraListener(ConnectionListener):
         Description:
         Sends a message to a destination in the message system.
         """
-        self.conn.send(destination=destination, message=message, headers={'correlation-id': correlation_id})
+        self.conn.send(destination=destination, message=message, headers=headers)
         
     def subscribe(self, destination, ack='auto'):
         """
@@ -325,7 +314,7 @@ class IslandoraListener(ConnectionListener):
         Description:
             Remove an existing subscription - so that the client no longer receives messages from that destination.
         """
-        self.conn.unsubscribe(destination)
+        self.conn.unsubscribe(destination=destination)
 
     def connect(self):
         self.conn.start()
@@ -352,17 +341,19 @@ def alarm_handler(signum, frame):
             else:
                 signal.alarm(reconnect_wait)
     else:
-        if stomp_client.conn.is_connected():
-            signal.alarm(POLLING_TIME)
-        else:
+        try:
+            if stomp_client.conn.is_connected():
+                signal.alarm(POLLING_TIME)
+            else:
+                logger.error("Disconnected from JMS (fedora down?). Shutting down.")
+                sys.exit(1)
+        except:
+            logger.error("Unexpected Error. Shutting down.")
             sys.exit(1)
         
-
-        
 def shutdown_handler(signum, frame):
-
-    stomp_client.disconnect();
-    sys.exit(0);
+    stomp_client.disconnect()
+    sys.exit(0)
 
 if __name__ == '__main__':
 
